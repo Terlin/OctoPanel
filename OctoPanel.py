@@ -10,15 +10,15 @@ import os
 from string import split
 from time import sleep, strftime, localtime
 from xml.dom.minidom import *
-from OctoCommands import *
 from Adafruit_I2C import Adafruit_I2C
 from Adafruit_CharLCDPlate import Adafruit_CharLCDPlate
 from ListSelector import ListSelector
 import smbus
+import json, httplib
 
 configfile = 'OctoPanel.xml'
 # set DEBUG=1 for print debug statements
-DEBUG = 0
+DEBUG = 1
 DISPLAY_ROWS = 2
 DISPLAY_COLS = 16
 
@@ -31,6 +31,7 @@ lcd = Adafruit_CharLCDPlate(busnum = 1)
 lcd.begin(DISPLAY_COLS, DISPLAY_ROWS)
 lcd.backlight(lcd.OFF)
 
+# OctoPrint commands
 def OctoProcStatus():
 	lcd.message(commands.getoutput("/sbin/ifconfig").split("\n")[1].split()[1][5:])
 	if DEBUG:
@@ -68,7 +69,104 @@ def DeleteFile():
 	if DEBUG:
        		print('start DeleteFile')
 
-# commands
+
+def GetRESTpost(RESTcmd, RESTpath):
+	#conn.request('GET', 'api/state?apikey=955B35D4B44944B3A414539177E9493F')
+	jsonObj = []
+	RESTstring = []
+
+	conn = httplib.HTTPConnection('octopi.local', 5000, timeout=30)
+	conn.connect()
+
+	#RESTstring.append("%s%%apikey=955B35D4B44944B3A414539177E9493F", RESTpath)
+	RESTstring = "%s%%apikey=955B35D4B44944B3A414539177E9493F"%RESTpath
+	conn.request(RESTcmd, RESTstring)
+	RC = conn.getresponse()
+
+	if RC.status == 200:
+		jsonObj = RC.read()
+		conn.close()
+		return jsonObj
+	elif RC.status == 204:
+		lcd.message("No content, RC=204")
+		conn.close()
+		sleep(1)
+		return jsonObj
+	elif RC.status == 409 and RESTcmd == "/api/job":
+		lcd.message("(No) job running ?")
+		lcd.message("Job conflicting, RC=409")
+		conn.close()
+		sleep(1)
+		return 0
+	else:
+		lcd.message("No content\n")
+		lcd.message(RC.reason)
+		conn.close()
+		sleep(1)
+		return 0
+
+
+def DisplayPrinterStatus():
+	if DEBUG:
+        	print('in DisplayPrinterStatus')
+	
+   	lcd.clear()
+	while not(lcd.buttonPressed(lcd.LEFT)):
+		DisplayText = []
+       		lcd.home()
+		StatusJson = GetRESTpost("/api/state")
+
+		if StatusJson == 0:
+			return
+
+		octostatus = json.loads(StatusJson)
+
+		DisplayText.append("%s %s\n" % (octostatus['state']['stateString'], octostatus['progress']['printTimeLeft']))
+		#DisplayText =  "Extr:%.3f Bed:%.3f" % (octostatus['temperatures']['extruder']['current'], octostatus['temperatures']['bed']['current'])
+		DisplayText.append("E:199C B:50C")
+        	lcd.message(DisplayText)
+		sleep(5)
+
+def DisplayCurJob():
+	if DEBUG:
+        	print('in DisplayCurJob')
+	
+   	lcd.clear()
+	while not(lcd.buttonPressed(lcd.LEFT)):
+		DisplayText = []
+       		lcd.home()
+		StatusJson = GetRESTpost('GET', '/api/job')
+
+		if StatusJson == 0:
+			return
+
+		octostatus = json.loads(StatusJson)
+
+		DisplayText.append("%s\n" % (octostatus['job']['name']))
+		DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['completion']))
+        	lcd.message(DisplayText)
+		sleep(2)
+
+def PauseJob():
+	if DEBUG:
+        	print('in PauseJob')
+	
+   	lcd.clear()
+	while not(lcd.buttonPressed(lcd.LEFT)):
+		DisplayText = []
+       		lcd.home()
+		StatusJson = GetRESTpost('POST', '/api/control/job')
+
+		if StatusJson == 0:
+			return
+
+		octostatus = json.loads(StatusJson)
+
+		DisplayText.append("%s\n" % (octostatus['job']['name']))
+		DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['completion']))
+        	lcd.message(DisplayText)
+		sleep(5)
+# LCDmenu commands
 def DoQuit():
     lcd.clear()
     lcd.message('Are you sure?\nPress Sel for Y')
