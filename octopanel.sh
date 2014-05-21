@@ -1,18 +1,18 @@
 #! /bin/sh
-# /etc/init.d/lcdmenuinit
+# /etc/init.d/octopanel.sh
 
 case "$1" in
   start)
-    echo "Starting lcdmenu"
-    cd /home/pi/lcdmenu
-    sudo /usr/bin/python /home/pi/lcdmenu/lcdmenu.py &
+    echo "Starting OctoPanel"
+    cd /home/pi/OctoPanel
+    sudo -u pi /usr/bin/python /home/pi/OctoPanel/OctoPanel.py &
   ;;
   stop)
-    echo "Stopping lcdmenu"
-    killall python
+    echo "Stopping OctoPanel"
+#    killall python
     ;;
   *)
-    echo "Usage: /etc/init.d/lcdmenuinit {start|stop}"
+    echo "Usage: /etc/init.d/octopanel.sh {start|stop}"
     exit 1
     ;;
 esac
