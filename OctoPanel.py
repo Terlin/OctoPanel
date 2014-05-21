@@ -80,8 +80,11 @@ def GetRESTpost(RESTcmd, RESTpath):
 
 	#RESTstring.append("%s%%apikey=955B35D4B44944B3A414539177E9493F", RESTpath)
 	RESTstring = "%s%%apikey=955B35D4B44944B3A414539177E9493F"%RESTpath
+
 	conn.request(RESTcmd, RESTstring)
 	RC = conn.getresponse()
+	print RC.status
+	print RC.reason
 
 	if RC.status == 200:
 		jsonObj = RC.read()
@@ -114,7 +117,7 @@ def DisplayPrinterStatus():
 	while not(lcd.buttonPressed(lcd.LEFT)):
 		DisplayText = []
        		lcd.home()
-		StatusJson = GetRESTpost("/api/state")
+		StatusJson = GetRESTpost('GET', "/api/state")
 
 		if StatusJson == 0:
 			return
@@ -135,7 +138,7 @@ def DisplayCurJob():
 	while not(lcd.buttonPressed(lcd.LEFT)):
 		DisplayText = []
        		lcd.home()
-		StatusJson = GetRESTpost('GET', '/api/job')
+		StatusJson = GetRESTpost('GET', 'api/job')
 
 		if StatusJson == 0:
 			return
