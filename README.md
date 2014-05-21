@@ -13,7 +13,8 @@ http://docs.octoprint.org/en/latest/api/index.html
 OctoPi website:
 http://guysoft.wordpress.com/2013/08/04/octopi/
 
-Uses an RPI and an Adafruit 16x2 LCD panel.
+Uses an RPI and an Adafruit 16x2 LCD panel:
+https://www.adafruit.com/products/1115
 
 Menu system based on RaspberryPiLcdMenu code found here on github.
 
