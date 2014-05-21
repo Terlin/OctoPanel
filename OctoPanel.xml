@@ -1,0 +1,49 @@
+<application>
+  <settings lcdColor="White" lcdBackground="On" />
+  <folder text="K8200 printer">
+  	<folder text="Printer status">
+		<widget text="Realtime display" function="DisplayPrinterStatus" />
+		<widget text="Current Job" function="DisplayCurJob" />
+  		<folder text="Job commands">
+			<widget text="Pause Job" function="PauseJob" />
+			<widget text="Restart Job" function="PrintFile" />
+			<widget text="Cancel Job" function="PrintFile" />
+  		</folder>
+  		<folder text="Printer commands">
+			<widget text="Home All axis" function="PrintFile" />
+			<widget text="Home X/Y axis" function="PrintFile" />
+			<widget text="Z-axis UP 5cm" function="DeleteFile" />
+			<widget text="Disconnet" function="DeleteFile" />
+			<widget text="Connect" function="DeleteFile" />
+  		</folder>
+  		<folder text="File commands">
+			<widget text="List files" function="PrintFile" />
+			<widget text="Delete file" function="DeleteFile" />
+  		</folder>
+  	</folder>
+  	<folder text="OctoPrint">
+		<widget text="Process status" function="OctoProcStatus" />
+		<widget text="Restart OctoPrint" function="OctoRestart" />
+  	</folder>
+  	<folder text="webcamDaemon">
+		<widget text="Process status" function="WebcamProcStatus" />
+		<widget text="Restart webcam" function="WebcamRestart" />
+  	</folder>
+  </folder>
+  <folder text="System Info">
+    <widget text="Show Date/Time" function="ShowDateTime" />
+    <widget text="Set Date/Time" function="SetDateTime" />
+    <folder text="Network">
+      <widget text="IP Address" function="ShowIPAddress" />
+    </folder>
+  </folder>
+  <folder text="Camera">
+    <widget text="Detect" function="CameraDetect" />
+    <widget text="Take Picture" function="CameraTakePicture" />
+    <widget text="Time Lapse" function="CameraTimeLapse" />
+  </folder>
+  <widget text="Quit" function="DoQuit" />
+  <widget text="Reboot" function="DoReboot" />
+  <widget text="Shutdown" function="DoShutdown" />
+</application>
+
