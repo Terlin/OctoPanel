@@ -6,7 +6,8 @@
 # from Adafruit Electronics.
 
 import commands
-import os
+import os, threading
+from threading import Timer
 from string import split
 from time import sleep, strftime, localtime
 from xml.dom.minidom import *
@@ -19,6 +20,8 @@ import json, httplib
 configfile = 'OctoPanel.xml'
 # set DEBUG=1 for print debug statements
 DEBUG = 1
+# Backlight off timer in seconds
+LCDOFF = 10.0
 DISPLAY_ROWS = 2
 DISPLAY_COLS = 16
 
@@ -30,6 +33,24 @@ lcd = Adafruit_CharLCDPlate(busnum = 1)
 
 lcd.begin(DISPLAY_COLS, DISPLAY_ROWS)
 lcd.backlight(lcd.OFF)
+
+# Turn off Backlight after 120 sec
+def LCDBckLightOff():
+	if DEBUG:
+		print "LCD backlight off"
+	lcd.backlight(lcd.OFF)
+
+t = Timer(LCDOFF, LCDBckLightOff)
+t.start()
+
+def ResetLCDTimer():
+	if DEBUG:
+		print "LCDOFF Timer reset"
+
+	global t
+	lcd.backlight(lcd.ON)
+	t = Timer(LCDOFF, LCDBckLightOff)
+	t.start()
 
 # OctoPrint commands
 def OctoProcStatus():
@@ -178,7 +199,7 @@ def DoQuit():
             lcd.clear()
             lcd.backlight(lcd.OFF)
             quit()
-        sleep(0.25)
+        sleep(0.5)
 
 def DoShutdown():
     lcd.clear()
@@ -191,7 +212,7 @@ def DoShutdown():
             lcd.backlight(lcd.OFF)
             commands.getoutput("sudo shutdown -h now")
             quit()
-        sleep(0.25)
+        sleep(0.5)
 
 def DoReboot():
     lcd.clear()
@@ -204,7 +225,7 @@ def DoReboot():
             lcd.backlight(lcd.OFF)
             commands.getoutput("sudo reboot")
             quit()
-        sleep(0.25)
+        sleep(0.5)
 
 def LcdOff():
     lcd.backlight(lcd.OFF)
@@ -217,7 +238,7 @@ def ShowDateTime():
         print('in ShowDateTime')
     lcd.clear()
     while not(lcd.buttonPressed(lcd.LEFT)):
-        sleep(0.25)
+        sleep(0.5)
         lcd.home()
         lcd.message(strftime('%a %b %d %Y\n%I:%M:%S %p', localtime()))
     
@@ -312,7 +333,7 @@ def SetDateTime():
             lcd.noBlink()
             os.system(strftime('sudo date --set="%d %b %Y %H:%M:%S"', curtime))
             break
-        sleep(0.25)
+        sleep(0.5)
 
     lcd.noBlink()
 
@@ -324,7 +345,7 @@ def ShowIPAddress():
     while 1:
         if lcd.buttonPressed(lcd.LEFT):
             break
-        sleep(0.25)
+        sleep(0.5)
     
 def CameraDetect():
     if DEBUG:
@@ -351,7 +372,7 @@ class CommandToRun:
                 while 1:
                     if lcd.buttonPressed(lcd.DOWN):
                         break
-                    sleep(0.25)
+                    sleep(0.5)
                 lcd.clear()
                 lcd.message(self.clist[i-1]+'\n'+self.clist[i])          
                 sleep(0.5)
@@ -450,6 +471,9 @@ class Display:
     def update(self, command):
         if DEBUG:
             print('do',command)
+	
+	# Set LCD Backlight Timer
+	ResetLCDTimer()
         if command == 'u':
             self.up()
         elif command == 'd':
@@ -535,25 +559,26 @@ while 1:
 	if (lcd.buttonPressed(lcd.LEFT)):
 		display.update('l')
 		display.display()
-		sleep(0.25)
+		sleep(0.5)
 
 	if (lcd.buttonPressed(lcd.UP)):
 		display.update('u')
 		display.display()
-		sleep(0.25)
+		sleep(0.5)
 
 	if (lcd.buttonPressed(lcd.DOWN)):
 		display.update('d')
 		display.display()
-		sleep(0.25)
+		sleep(0.5)
 
 	if (lcd.buttonPressed(lcd.RIGHT)):
 		display.update('r')
 		display.display()
-		sleep(0.25)
+		sleep(0.5)
 
 	if (lcd.buttonPressed(lcd.SELECT)):
 		display.update('s')
 		display.display()
-		sleep(0.25)
+		sleep(0.5)
+	sleep(0.1)
 
