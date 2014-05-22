@@ -78,10 +78,11 @@ def GetRESTpost(RESTcmd, RESTpath):
 	conn = httplib.HTTPConnection('octopi.local', 5000, timeout=30)
 	conn.connect()
 
-	#RESTstring.append("%s%%apikey=955B35D4B44944B3A414539177E9493F", RESTpath)
-	RESTstring = "%s%%apikey=955B35D4B44944B3A414539177E9493F"%RESTpath
+	#RESTstring.append("%s?apikey=955B35D4B44944B3A414539177E9493F", RESTpath)
+	RESTstring = "%s?apikey=955B35D4B44944B3A414539177E9493F"%RESTpath
 
 	conn.request(RESTcmd, RESTstring)
+	print RESTstring
 	RC = conn.getresponse()
 	print RC.status
 	print RC.reason
@@ -95,7 +96,7 @@ def GetRESTpost(RESTcmd, RESTpath):
 		conn.close()
 		sleep(1)
 		return jsonObj
-	elif RC.status == 409 and RESTcmd == "/api/job":
+	elif RC.status == 409 and RESTcmd == "/api/control/job":
 		lcd.message("(No) job running ?")
 		lcd.message("Job conflicting, RC=409")
 		conn.close()
@@ -128,7 +129,7 @@ def DisplayPrinterStatus():
 		#DisplayText =  "Extr:%.3f Bed:%.3f" % (octostatus['temperatures']['extruder']['current'], octostatus['temperatures']['bed']['current'])
 		DisplayText.append("E:199C B:50C")
         	lcd.message(DisplayText)
-		sleep(5)
+		sleep(1)
 
 def DisplayCurJob():
 	if DEBUG:
@@ -138,7 +139,7 @@ def DisplayCurJob():
 	while not(lcd.buttonPressed(lcd.LEFT)):
 		DisplayText = []
        		lcd.home()
-		StatusJson = GetRESTpost('GET', 'api/job')
+		StatusJson = GetRESTpost('GET', '/api/control/job')
 
 		if StatusJson == 0:
 			return
