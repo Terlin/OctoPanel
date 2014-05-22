@@ -1,9 +1,9 @@
 <application>
   <settings lcdColor="White" lcdBackground="On" />
-  <folder text="K8200 printer">
+  <folder text="Octo functions">
   	<folder text="Printer status">
-		<widget text="Realtime display" function="DisplayPrinterStatus" />
-		<widget text="Current Job" function="DisplayCurJob" />
+		<widget text="HW status" function="DisplayPrinterStatus" />
+		<widget text="Job status" function="DisplayCurJob" />
   		<folder text="Job commands">
 			<widget text="Pause Job" function="PauseJob" />
 			<widget text="Restart Job" function="PrintFile" />

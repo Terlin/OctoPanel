@@ -49,18 +49,6 @@ def WebcamRestart():
 	if DEBUG:
        		print('start WebcamRestart')
 
-def k8200Conn():
-	if DEBUG:
-       		print('start k8200Conn')
-
-def K8200Temperature():
-	if DEBUG:
-       		print('start K8200Temperature')
-
-def k8200RealTime():
-	if DEBUG:
-       		print('start k8200RealTime')
-
 def PrintFile():
 	if DEBUG:
        		print('start PrintFile')
@@ -70,18 +58,21 @@ def DeleteFile():
        		print('start DeleteFile')
 
 
-def GetRESTpost(RESTcmd, RESTpath):
-	#conn.request('GET', 'api/state?apikey=955B35D4B44944B3A414539177E9493F')
+def GetRESTpost(RESTcmd, RESTpath, RestHeader):
 	jsonObj = []
 	RESTstring = []
 
 	conn = httplib.HTTPConnection('octopi.local', 5000, timeout=30)
 	conn.connect()
 
-	#RESTstring.append("%s?apikey=955B35D4B44944B3A414539177E9493F", RESTpath)
+	#RESTstring.extend("%s?apikey=955B35D4B44944B3A414539177E9493F", RESTpath)
 	RESTstring = "%s?apikey=955B35D4B44944B3A414539177E9493F"%RESTpath
 
-	conn.request(RESTcmd, RESTstring)
+	if RESTcmd == 'PUT':
+		conn.request(RESTcmd, RESTstring, RestHeader)
+	else:
+		conn.request(RESTcmd, RESTstring)
+
 	print RESTstring
 	RC = conn.getresponse()
 	print RC.status
@@ -96,7 +87,7 @@ def GetRESTpost(RESTcmd, RESTpath):
 		conn.close()
 		sleep(1)
 		return jsonObj
-	elif RC.status == 409 and RESTcmd == "/api/control/job":
+	elif RC.status == 409 and RESTcmd == "/control/job":
 		lcd.message("(No) job running ?")
 		lcd.message("Job conflicting, RC=409")
 		conn.close()
@@ -118,18 +109,17 @@ def DisplayPrinterStatus():
 	while not(lcd.buttonPressed(lcd.LEFT)):
 		DisplayText = []
        		lcd.home()
-		StatusJson = GetRESTpost('GET', "/api/state")
+		StatusJson = GetRESTpost('GET', "/api/state", None)
 
 		if StatusJson == 0:
 			return
 
 		octostatus = json.loads(StatusJson)
 
-		DisplayText.append("%s %s\n" % (octostatus['state']['stateString'], octostatus['progress']['printTimeLeft']))
+		DisplayText = "%s %s\nE:199C B:50C" % (octostatus['state']['stateString'], octostatus['progress']['printTimeLeft'])
 		#DisplayText =  "Extr:%.3f Bed:%.3f" % (octostatus['temperatures']['extruder']['current'], octostatus['temperatures']['bed']['current'])
-		DisplayText.append("E:199C B:50C")
         	lcd.message(DisplayText)
-		sleep(1)
+		sleep(0.5)
 
 def DisplayCurJob():
 	if DEBUG:
@@ -139,17 +129,23 @@ def DisplayCurJob():
 	while not(lcd.buttonPressed(lcd.LEFT)):
 		DisplayText = []
        		lcd.home()
-		StatusJson = GetRESTpost('GET', '/api/control/job')
+		StatusJson = GetRESTpost('GET', '/api/state', None)
 
 		if StatusJson == 0:
 			return
 
 		octostatus = json.loads(StatusJson)
 
-		DisplayText.append("%s\n" % (octostatus['job']['name']))
-		DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['completion']))
+		print octostatus['state']['flags']['printing']
+		if octostatus['state']['flags']['printing'] == False:
+			lcd.message("No job running")
+			sleep(2)
+			return
+
+		DisplayText.append("%s\n" % (octostatus['currentZ']['filename']))
+		DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['printTimeLeft']))
         	lcd.message(DisplayText)
-		sleep(2)
+		sleep(0.5)
 
 def PauseJob():
 	if DEBUG:
@@ -159,17 +155,18 @@ def PauseJob():
 	while not(lcd.buttonPressed(lcd.LEFT)):
 		DisplayText = []
        		lcd.home()
-		StatusJson = GetRESTpost('POST', '/api/control/job')
+		StatusJson = GetRESTpost('POST', '/control/job', None)
 
 		if StatusJson == 0:
 			return
 
 		octostatus = json.loads(StatusJson)
 
-		DisplayText.append("%s\n" % (octostatus['job']['name']))
+		DisplayText.append("%s\n" % (octostatus['currentZ']['filename']))
 		DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['completion']))
         	lcd.message(DisplayText)
-		sleep(5)
+		sleep(0.5)
+
 # LCDmenu commands
 def DoQuit():
     lcd.clear()
