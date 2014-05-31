@@ -33,6 +33,25 @@ lcd = Adafruit_CharLCDPlate(busnum = 1)
 
 lcd.begin(DISPLAY_COLS, DISPLAY_ROWS)
 lcd.backlight(lcd.OFF)
+lcd.cursor()
+lcd.blink()
+
+#Define Characters
+Char1 = [0x0,0xe,0x11,0x11,0x11,0xe,0x0]
+Char2 = [0x0,0xe,0x11,0x15,0x11,0xe,0x0]
+Char3 = [0x0,0xe,0x1f,0x1b,0x1f,0xe,0x0]
+Char4 = [0x0,0xe,0x1f,0x1f,0x1f,0xe,0x0]
+Char5 = [0x4,0xe,0x1f,0x1f,0x1f,0xe,0x4]
+ExtrChar = [0x1f,0x1f,0xe,0xe,0xe,0xe,0x4]
+BedChar = [0x0,0x1f,0x11,0x11,0x11,0x1f,0x0]
+
+lcd.createChar(0, Char1)
+lcd.createChar(1, Char2)
+lcd.createChar(2, Char3)
+lcd.createChar(3, Char4)
+lcd.createChar(4, Char5)
+lcd.createChar(5, ExtrChar)
+lcd.createChar(6, BedChar)
 
 # Turn off Backlight after 120 sec
 def LCDBckLightOff():
@@ -126,11 +145,12 @@ def DisplayPrinterStatus():
         	print('in DisplayPrinterStatus')
 	
 	QueryInt = 0
+	i = 0
+	RunningSign = ['-', '\\', '|', '/']
    	lcd.clear()
 	while not(lcd.buttonPressed(lcd.LEFT)):
 		DisplayText = []
-       		lcd.home()
-		if QueryInt % 20 == 0:
+		if QueryInt % 10 == 0:
 			#Do a query again
 			StatusJson = GetRESTpost('GET', "/api/state", None)
 
@@ -139,14 +159,20 @@ def DisplayPrinterStatus():
 
 			octostatus = json.loads(StatusJson)
 
-			DisplayText =  "%s\nH:%3.1f B:%2.1f" % (octostatus['state']['stateString'], 
+			DisplayText =  "%s%s\n\x05:%3.1f \x06:%2.1f" % (RunningSign[i],
+				octostatus['state']['stateString'], 
 				octostatus['temperatures']['extruder']['current'], 
 				octostatus['temperatures']['bed']['current'])
         		lcd.message(DisplayText)
+			if i == 3:
+				i= 0
+			else:
+				i += 1
 			QueryInt = 0
 
 		# Else wait for keayboard buttuns
 		QueryInt += 1
+       		lcd.home()
 		sleep(0.25)
 
 def DisplayCurJob():
@@ -173,7 +199,10 @@ def DisplayCurJob():
 		DisplayText.append("%s\n" % (octostatus['currentZ']['filename']))
 		DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['printTimeLeft']))
         	lcd.message(DisplayText)
+		lcd.home()
 		sleep(0.5)
+
+	
 
 def PauseJob():
 	if DEBUG:
