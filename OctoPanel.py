@@ -21,7 +21,7 @@ configfile = 'OctoPanel.xml'
 # set DEBUG=1 for print debug statements
 DEBUG = 1
 # Backlight off timer in seconds
-LCDOFF = 10.0
+LCDOFF = 240.0
 DISPLAY_ROWS = 2
 DISPLAY_COLS = 16
 
@@ -86,7 +86,6 @@ def GetRESTpost(RESTcmd, RESTpath, RestHeader):
 	conn = httplib.HTTPConnection('octopi.local', 5000, timeout=30)
 	conn.connect()
 
-	#RESTstring.extend("%s?apikey=955B35D4B44944B3A414539177E9493F", RESTpath)
 	RESTstring = "%s?apikey=955B35D4B44944B3A414539177E9493F"%RESTpath
 
 	if RESTcmd == 'PUT':
@@ -126,21 +125,29 @@ def DisplayPrinterStatus():
 	if DEBUG:
         	print('in DisplayPrinterStatus')
 	
+	QueryInt = 0
    	lcd.clear()
 	while not(lcd.buttonPressed(lcd.LEFT)):
 		DisplayText = []
        		lcd.home()
-		StatusJson = GetRESTpost('GET', "/api/state", None)
+		if QueryInt % 20 == 0:
+			#Do a query again
+			StatusJson = GetRESTpost('GET', "/api/state", None)
 
-		if StatusJson == 0:
-			return
+			if StatusJson == 0:
+				return
 
-		octostatus = json.loads(StatusJson)
+			octostatus = json.loads(StatusJson)
 
-		DisplayText = "%s %s\nE:199C B:50C" % (octostatus['state']['stateString'], octostatus['progress']['printTimeLeft'])
-		#DisplayText =  "Extr:%.3f Bed:%.3f" % (octostatus['temperatures']['extruder']['current'], octostatus['temperatures']['bed']['current'])
-        	lcd.message(DisplayText)
-		sleep(0.5)
+			DisplayText =  "%s\nH:%3.1f B:%2.1f" % (octostatus['state']['stateString'], 
+				octostatus['temperatures']['extruder']['current'], 
+				octostatus['temperatures']['bed']['current'])
+        		lcd.message(DisplayText)
+			QueryInt = 0
+
+		# Else wait for keayboard buttuns
+		QueryInt += 1
+		sleep(0.25)
 
 def DisplayCurJob():
 	if DEBUG:
