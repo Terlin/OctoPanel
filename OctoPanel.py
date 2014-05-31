@@ -36,18 +36,19 @@ lcd.backlight(lcd.OFF)
 lcd.blink()
 
 #Define Characters
-BackSlash = 
+ArrowChar = [0x0,0x8,0xc,0xe,0xc,0x8,0x0]
+DegreeChar = [0x8,0x14,0x8,0x0,0x0,0x0,0x0a]
 TimeChar = [0x0,0xe,0x15,0x17,0x11,0xe,0x0]
 IdleChar = [0x0,0x1b,0xe,0x4,0xe,0x1b,0x0]
 JobChar = [0x0,0x1,0x3,0x16,0x1c,0x8,0x0]
 ExtrChar = [0x1f,0x1f,0xe,0xe,0xe,0xe,0x4]
 BedChar = [0x0,0x1f,0x11,0x11,0x11,0x1f,0x0]
 
-lcd.createChar(0, Char1)
-lcd.createChar(1, Char2)
-lcd.createChar(2, Char3)
-lcd.createChar(3, Char4)
-lcd.createChar(4, Char5)
+lcd.createChar(0, ArrowChar)
+lcd.createChar(1, DegreeChar)
+lcd.createChar(2, TimeChar)
+lcd.createChar(3, IdleChar)
+lcd.createChar(4, JobChar)
 lcd.createChar(5, ExtrChar)
 lcd.createChar(6, BedChar)
 
@@ -157,7 +158,10 @@ def DisplayPrinterStatus():
 
 			octostatus = json.loads(StatusJson)
 
-			DisplayText =  "%s%s\n\x05:%3.1f \x06:%2.1f" % (RunningSign[i],
+			if octostatus['state']['stateString'] == 'Offline':
+				DisplayText =  "Priner\nOffline"
+			else:
+			DisplayText =  "%s%s\n\x05:%3.1f\x01 \x06:%2.1f\x01" % (RunningSign[i],
 				octostatus['state']['stateString'], 
 				octostatus['temperatures']['extruder']['current'], 
 				octostatus['temperatures']['bed']['current'])
@@ -482,7 +486,8 @@ class Display:
                 str += '\n'
             if row < len(self.curFolder.items):
                 if row == self.curSelectedItem:
-                    cmd = '-'+self.curFolder.items[row].text
+                    #####cmd = '-'+self.curFolder.items[row].text
+                    cmd = '\x00'+self.curFolder.items[row].text
                     if len(cmd) < 16:
                         for row in range(len(cmd), 16):
                             cmd += ' '
