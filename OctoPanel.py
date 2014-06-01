@@ -192,29 +192,36 @@ def DisplayCurJob():
 	if DEBUG:
         	print('in DisplayCurJob')
 	
+	QueryInt = 0
    	lcd.clear()
-	while not(lcd.buttonPressed(lcd.LEFT)):
-		DisplayText = []
-       		lcd.home()
-		StatusJson = GetRESTpost('GET', '/api/state', None)
 
-		if StatusJson == 0:
-			return
+	if QueryInt % 20 == 0:
+		while not(lcd.buttonPressed(lcd.LEFT)):
+			DisplayText = []
+			QueryInt = 0
+       			lcd.home()
 
-		octostatus = json.loads(StatusJson)
+			StatusJson = GetRESTpost('GET', '/api/state', None)
+	
+			if StatusJson == 0:
+				return
+	
+			octostatus = json.loads(StatusJson)
+	
+			print octostatus['state']['flags']['printing']
+			if octostatus['state']['flags']['printing'] == False:
+				lcd.message("\x05 No job running")
+				sleep(2)
+				return
+	
+			DisplayText.append("\x04 %% complete %.f2 %s\n" % (octostatus['progress']['progress']))
+			DisplayText.append("%s" % (octostatus['currentZ']['filename']))
+        		lcd.message(DisplayText)
 
-		print octostatus['state']['flags']['printing']
-		if octostatus['state']['flags']['printing'] == False:
-			lcd.message("No job running")
-			sleep(2)
-			return
 
-		DisplayText.append("%s\n" % (octostatus['currentZ']['filename']))
-		DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['printTimeLeft']))
-        	lcd.message(DisplayText)
+		QueryInt += 1
 		lcd.home()
-		sleep(0.5)
-
+		sleep(0.2)
 	
 
 def PauseJob():
@@ -225,16 +232,20 @@ def PauseJob():
 	while not(lcd.buttonPressed(lcd.LEFT)):
 		DisplayText = []
        		lcd.home()
-		StatusJson = GetRESTpost('POST', '/control/job', None)
+		QueryInt = 0
 
-		if StatusJson == 0:
-			return
+		if QueryInt % 20 == 0:
+			StatusJson = GetRESTpost('POST', '/control/job', None)
 
-		octostatus = json.loads(StatusJson)
+			if StatusJson == 0:
+				return
 
-		DisplayText.append("%s\n" % (octostatus['currentZ']['filename']))
-		DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['completion']))
-        	lcd.message(DisplayText)
+			octostatus = json.loads(StatusJson)
+
+			DisplayText.append("%s\n" % (octostatus['currentZ']['filename']))
+			DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['completion']))
+       		 	lcd.message(DisplayText)
+
 		sleep(0.5)
 
 # LCDmenu commands
