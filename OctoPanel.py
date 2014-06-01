@@ -40,6 +40,7 @@ ArrowChar =  [0b00000,0b01000,0b01100,0b01110,0b01100,0b01000,0b00000]
 DegreeChar = [0b01100,0b10010,0b10010,0b01100,0b00000,0b00000,0b00000]
 TimeChar =   [0b00000,0b01110,0b10101,0b10111,0b10001,0b01110,0b00000]
 IdleChar =   [0b00000,0b11011,0b01110,0b00100,0b01110,0b11011,0b00000]
+FailedChar = [0b00000,0b01110,0b10001,0b11011,0b10101,0b01010,0b01110]
 JobChar =    [0b00000,0b00001,0b00011,0b10110,0b11100,0b01000,0b00000]
 ExtrChar =   [0b11111,0b01110,0b01110,0b01110,0b01110,0b01110,0b00100]
 BedChar =    [0b00000,0b11111,0b10001,0b10001,0b10001,0b11111,0b00000]
@@ -167,7 +168,8 @@ def DisplayPrinterStatus():
 			octostatus = json.loads(StatusJson)
 
 			if octostatus['state']['stateString'] == 'Offline':
-				DisplayText =  "Printer\nOffline"
+				lcd.createChar(2, FailedChar)
+				DisplayText =  "Printer        \x02\nOffline"
 			else:
 				lcd.createChar(2, RunningChar[i])
 				DisplayText = "\x04 %s \x02\n\x05:%3.1f\x01 \x06:%2.1f\x01" % (
