@@ -5,9 +5,9 @@
 		<widget text="HW status" function="DisplayPrinterStatus" />
 		<widget text="Job status" function="DisplayCurJob" />
   		<folder text="Job commands">
+			<widget text="Cancel Job" function="CancelJob" />
 			<widget text="Pause Job" function="PauseJob" />
-			<widget text="Restart Job" function="PrintFile" />
-			<widget text="Cancel Job" function="PrintFile" />
+			<widget text="Restart Job" function="RestartJob" />
   		</folder>
   		<folder text="Printer commands">
 			<widget text="Home All axis" function="PrintFile" />

@@ -21,7 +21,7 @@ configfile = 'OctoPanel.xml'
 # set DEBUG=1 for print debug statements
 DEBUG = 1
 # Backlight off timer in seconds
-LCDOFF = 240.0
+LCDOFF = 900.0
 DISPLAY_ROWS = 2
 DISPLAY_COLS = 16
 
@@ -113,10 +113,13 @@ def GetRESTpost(RESTcmd, RESTpath, RestHeader):
 	conn = httplib.HTTPConnection('octopi.local', 5000, timeout=30)
 	conn.connect()
 
-	RESTstring = "%s?apikey=955B35D4B44944B3A414539177E9493F"%RESTpath
+	RESTstring = "%s?apikey=955B35D4B44944B3A414539177E9493F" % RESTpath
 
 	if RESTcmd == 'PUT':
 		conn.request(RESTcmd, RESTstring, RestHeader)
+		RC = conn.getresponse()
+		print RC.status
+		print RC.reason
 	else:
 		conn.request(RESTcmd, RESTstring)
 
@@ -124,6 +127,11 @@ def GetRESTpost(RESTcmd, RESTpath, RestHeader):
 	RC = conn.getresponse()
 	print RC.status
 	print RC.reason
+
+	if RC.status == 204:
+		return "OK"
+	elif RC.status == 409:
+		return "NoJob"
 
 	if RC.status == 200:
 		jsonObj = RC.read()
@@ -171,6 +179,7 @@ def DisplayPrinterStatus():
 				lcd.createChar(2, FailedChar)
 				DisplayText =  "Printer        \x02\nOffline"
 			else:
+   				lcd.clear()
 				lcd.createChar(2, RunningChar[i])
 				DisplayText = "\x04 %s \x02\n\x05:%3.1f\x01 \x06:%2.1f\x01" % (
 					octostatus['state']['stateString'], 
@@ -195,11 +204,11 @@ def DisplayCurJob():
 	QueryInt = 0
    	lcd.clear()
 
-	if QueryInt % 20 == 0:
-		while not(lcd.buttonPressed(lcd.LEFT)):
+	while not(lcd.buttonPressed(lcd.LEFT)):
+		if QueryInt % 50 == 0:
 			DisplayText = []
 			QueryInt = 0
-       			lcd.home()
+			lcd.clear()
 
 			StatusJson = GetRESTpost('GET', '/api/state', None)
 	
@@ -214,13 +223,13 @@ def DisplayCurJob():
 				sleep(2)
 				return
 	
-			DisplayText.append("\x04 %% complete %.f2 %s\n" % (octostatus['progress']['progress']))
-			DisplayText.append("%s" % (octostatus['currentZ']['filename']))
+			PercentDone = octostatus['progress']['progress'] * 100
+			print PercentDone
+			lcd.createChar(2, TimeChar)
+			DisplayText = ("\x04 %d%% Complete\n\x02 %s Left" % (int(PercentDone), octostatus['progress']['printTimeLeft']))
         		lcd.message(DisplayText)
-
-
+			QueryInt = 0
 		QueryInt += 1
-		lcd.home()
 		sleep(0.2)
 	
 
@@ -229,24 +238,82 @@ def PauseJob():
         	print('in PauseJob')
 	
    	lcd.clear()
-	while not(lcd.buttonPressed(lcd.LEFT)):
-		DisplayText = []
-       		lcd.home()
-		QueryInt = 0
+	DisplayText = []
+       	lcd.home()
 
-		if QueryInt % 20 == 0:
-			StatusJson = GetRESTpost('POST', '/control/job', None)
+	RestHeader = "{\n \"command\": \"pause\" \n}"
+	StatusJson = GetRESTpost('POST', '/api/control/job', RestHeader)
 
-			if StatusJson == 0:
-				return
+	if StatusJson == "OK":
+       		lcd.message('Job paused')
+	elif StatusJson == "NoJob":
+       		lcd.message('No Job running')
+		sleep(2)
+	else:
+       		lcd.message('API Error')
+		sleep(2)
 
-			octostatus = json.loads(StatusJson)
+def CancelJob():
+	if DEBUG:
+        	print('in CancelJob')
+	
+   	lcd.clear()
+	DisplayText = []
+       	lcd.home()
 
-			DisplayText.append("%s\n" % (octostatus['currentZ']['filename']))
-			DisplayText.append("%% complete %.f2 %s" % (octostatus['progress']['completion']))
-       		 	lcd.message(DisplayText)
+	RestHeader = "{\n \"command\": \"cancel\" \n}"
+	StatusJson = GetRESTpost('POST', '/api/control/job', RestHeader)
 
-		sleep(0.5)
+	if StatusJson == "OK":
+       		lcd.message('Job Canceled')
+	elif StatusJson == "NoJob":
+       		lcd.message('No Job -Cancel')
+		sleep(2)
+	else:
+       		lcd.message('API Error')
+		sleep(2)
+
+
+def RestartJob():
+	if DEBUG:
+        	print('in RestartJob')
+	
+   	lcd.clear()
+	DisplayText = []
+       	lcd.home()
+
+	RestHeader = "{\n \"command\": \"restart\" \n}"
+	StatusJson = GetRESTpost('POST', '/api/control/job', RestHeader)
+
+	if StatusJson == "OK":
+       		lcd.message('Job Restarted')
+	elif StatusJson == "NoJob":
+       		lcd.message('No Job -Restart')
+		sleep(2)
+	else:
+       		lcd.message('API Error')
+		sleep(2)
+
+def HomeXY():
+	if DEBUG:
+        	print('in HomeXY')
+	
+   	lcd.clear()
+	DisplayText = []
+       	lcd.home()
+
+	RestHeader = "{\n \"command\": \"home\", \"axes\": [\"x\", \"y\"] \n}"
+	StatusJson = GetRESTpost('POST', '/api/printer/printhead', RestHeader)
+
+	if StatusJson == "OK":
+       		lcd.message('Job Restarted')
+	elif StatusJson == "NoJob":
+       		lcd.message('No Job -Restart')
+		sleep(2)
+	else:
+       		lcd.message('API Error')
+		sleep(2)
+
 
 # LCDmenu commands
 def DoQuit():
