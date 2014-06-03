@@ -213,7 +213,7 @@ def DisplayCurJob():
 	
 			lcd.blink()
 			octostatus = json.loads(StatusJson)
-			print octostatus['state']['flags']['printing']
+
 			if octostatus['state']['flags']['printing'] == False:
 				lcd.message("\x05 No job running")
 				sleep(2)
