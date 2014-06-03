@@ -216,6 +216,7 @@ def DisplayCurJob():
 			if StatusJson == 0:
 				return
 	
+			lcd.blink()
 			octostatus = json.loads(StatusJson)
 			print octostatus['state']['flags']['printing']
 			if octostatus['state']['flags']['printing'] == False:
@@ -229,6 +230,7 @@ def DisplayCurJob():
 				DisplayText = ("\x04 %d%% Complete\n\x02 %s Left" % (int(PercentDone), 
 								octostatus['progress']['printTimeLeft']))
         			lcd.message(DisplayText)
+				lcd.home()
 				displayType = 1
 				QueryInt = 0
 
@@ -236,6 +238,7 @@ def DisplayCurJob():
 				DisplayText = ("\x04 %d%% Complete\n\x05 Z = %s" % (int(PercentDone), 
 								octostatus['currentZ']))
         			lcd.message(DisplayText)
+				lcd.home()
 				displayType = 2
 				QueryInt = 0
 			elif displayType == 2:
@@ -243,6 +246,7 @@ def DisplayCurJob():
 				DisplayText = ("\x04 %d%% Complete\n\x02 %s Spent" % (int(PercentDone), 
 								octostatus['progress']['printTime']))
         			lcd.message(DisplayText)
+				lcd.home()
 				displayType = 3
 				QueryInt = 0
 			elif displayType == 3:
@@ -253,10 +257,20 @@ def DisplayCurJob():
 					octostatus['temperatures']['extruder']['current'], 
 					octostatus['temperatures']['bed']['current'])
         			lcd.message(DisplayText)
+				lcd.home()
+				displayType = 4
+				QueryInt = 0
+			elif displayType == 4:
+				DisplayText = ("\x04 %d%% Complete\n\x05%s > %s" % (int(PercentDone), 
+								octostatus['progress']['filepos'],
+								octostatus['job']['filesize']))
+        			lcd.message(DisplayText)
+				lcd.home()
 				displayType = 0
 				QueryInt = 0
 		QueryInt += 1
 		sleep(0.2)
+	lcd.noBlink()
 	
 
 def PauseJob():
