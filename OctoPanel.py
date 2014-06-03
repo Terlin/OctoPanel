@@ -202,6 +202,7 @@ def DisplayCurJob():
         	print('in DisplayCurJob')
 	
 	QueryInt = 0
+	displayType = 0
    	lcd.clear()
 
 	while not(lcd.buttonPressed(lcd.LEFT)):
@@ -216,19 +217,44 @@ def DisplayCurJob():
 				return
 	
 			octostatus = json.loads(StatusJson)
-	
 			print octostatus['state']['flags']['printing']
 			if octostatus['state']['flags']['printing'] == False:
 				lcd.message("\x05 No job running")
 				sleep(2)
 				return
 	
-			PercentDone = octostatus['progress']['progress'] * 100
-			print PercentDone
-			lcd.createChar(2, TimeChar)
-			DisplayText = ("\x04 %d%% Complete\n\x02 %s Left" % (int(PercentDone), octostatus['progress']['printTimeLeft']))
-        		lcd.message(DisplayText)
-			QueryInt = 0
+			if displayType == 0:
+				lcd.createChar(2, TimeChar)
+				PercentDone = octostatus['progress']['progress'] * 100
+				DisplayText = ("\x04 %d%% Complete\n\x02 %s Left" % (int(PercentDone), 
+								octostatus['progress']['printTimeLeft']))
+        			lcd.message(DisplayText)
+				displayType = 1
+				QueryInt = 0
+
+			elif displayType == 1:
+				DisplayText = ("\x04 %d%% Complete\n\x05 Z = %s" % (int(PercentDone), 
+								octostatus['currentZ']))
+        			lcd.message(DisplayText)
+				displayType = 2
+				QueryInt = 0
+			elif displayType == 2:
+				lcd.createChar(2, TimeChar)
+				DisplayText = ("\x04 %d%% Complete\n\x02 %s Spent" % (int(PercentDone), 
+								octostatus['progress']['printTime']))
+        			lcd.message(DisplayText)
+				displayType = 3
+				QueryInt = 0
+			elif displayType == 3:
+				PercentDone = octostatus['progress']['progress'] * 100
+				DisplayText = ("\x04 %d%% Complete\n\x02 %s Spent" % (int(PercentDone), 
+								octostatus['progress']['printTime']))
+				DisplayText = "\x04 %d%% Complete\n\x05:%3.1f\x01 \x06:%2.1f\x01" % (int(PercentDone),
+					octostatus['temperatures']['extruder']['current'], 
+					octostatus['temperatures']['bed']['current'])
+        			lcd.message(DisplayText)
+				displayType = 0
+				QueryInt = 0
 		QueryInt += 1
 		sleep(0.2)
 	
