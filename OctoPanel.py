@@ -19,7 +19,7 @@ import json, httplib
 
 configfile = 'OctoPanel.xml'
 # set DEBUG=1 for print debug statements
-DEBUG = 1
+DEBUG = 0
 # Backlight off timer in seconds
 LCDOFF = 900.0
 DISPLAY_ROWS = 2
@@ -118,15 +118,10 @@ def GetRESTpost(RESTcmd, RESTpath, RestHeader):
 	if RESTcmd == 'PUT':
 		conn.request(RESTcmd, RESTstring, RestHeader)
 		RC = conn.getresponse()
-		print RC.status
-		print RC.reason
 	else:
 		conn.request(RESTcmd, RESTstring)
 
-	print RESTstring
 	RC = conn.getresponse()
-	print RC.status
-	print RC.reason
 
 	if RC.status == 204:
 		return "OK"
